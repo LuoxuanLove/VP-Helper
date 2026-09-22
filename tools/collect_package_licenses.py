@@ -14,7 +14,10 @@ def main() -> None:
     packages = {key: value["path"] for key, value in assets["libraries"].items() if value["type"] == "package"}
     for framework in assets.get("project", {}).get("frameworks", {}).values():
         for dep in framework.get("downloadDependencies", []):
-            version = dep["version"].strip("[]")
+            bounds = [v.strip() for v in dep["version"].strip("[]()").split(',')]
+            if len(set(bounds)) != 1:
+                raise SystemExit(f'Expected an exact runtime pack version: {dep["name"]}')
+            version = bounds[0]
             packages[f'{dep["name"]}/{version}'] = f'{dep["name"].lower()}/{version}'
     report = []
     for identity, relative in sorted(packages.items()):

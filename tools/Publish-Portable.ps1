@@ -42,7 +42,7 @@ try {
             -p:DebugSymbols=false -p:DebugType=None "-p:Version=$Version" "-p:RepositoryCommit=$commit" `
             -p:ContinuousIntegrationBuild=true -o $packageRoot
         Check-Exit 'Publish Windows x64'
-        foreach ($name in @('VPHelper.WinUI.exe', 'VPHelper.WinUI.dll', 'Microsoft.UI.Xaml.dll', 'coreclr.dll', 'WebView2Loader.dll')) {
+        foreach ($name in @('VPHelper.WinUI.exe', 'VPHelper.WinUI.dll', 'Microsoft.UI.Xaml.dll', 'coreclr.dll', 'Microsoft.Web.WebView2.Core.dll')) {
             if (-not (Test-Path -LiteralPath (Join-Path $packageRoot $name))) { throw "Required runtime file missing: $name" }
         }
         Copy-Item -LiteralPath 'THIRD_PARTY_NOTICES.md' -Destination $packageRoot

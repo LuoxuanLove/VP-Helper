@@ -20,7 +20,9 @@ def main() -> int:
     for name in paths:
         parts = PurePosixPath(name).parts
         file = ROOT / name
-        if any(p.lower() in BLOCKED_DIRS for p in parts) or file.suffix.lower() in {".db", ".sqlite", ".sqlite3", ".pfx", ".p12", ".pem", ".key", ".log"}:
+        is_data_source = parts[:3] == ("src", "VPHelper.Core", "Data") and len(parts) == 4 and file.suffix == ".cs"
+        blocked = BLOCKED_DIRS - {"data"} if is_data_source else BLOCKED_DIRS
+        if any(p.lower() in blocked for p in parts) or file.suffix.lower() in {".db", ".sqlite", ".sqlite3", ".pfx", ".p12", ".pem", ".key", ".log"}:
             errors.append((name, "local/private/generated file"))
         if name.startswith("tests/fixtures/") and not name.startswith("tests/fixtures/public/"):
             errors.append((name, "unreviewed raw capture"))
@@ -42,6 +44,12 @@ def main() -> int:
                 errors.append((name, "active content or authentication field in fixture"))
             for token in re.findall(rb"[?&](?:amp;)?_token=([^\s\"'<> &]+)", content, re.I):
                 if token != b"REDACTED": errors.append((name, "unredacted logout token"))
+    ignored_cs = subprocess.check_output(["git", "ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--", "src/**/*.cs"], cwd=ROOT)
+    for raw_name in ignored_cs.split(b"\0"):
+        if not raw_name: continue
+        name = raw_name.decode("utf-8")
+        if not {"bin", "obj"}.intersection(PurePosixPath(name).parts):
+            errors.append((name, "source file excluded by ignore rules"))
     for name, error in errors:
         print(f"{name}: {error}")
     print(f"Audited {len(paths)} files; {len(errors)} findings.")

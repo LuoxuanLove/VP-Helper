@@ -14,6 +14,9 @@
 
 # User databases, browser profiles, diagnostics and credentials
 **/data/
+# Git on Windows also matches the source directory named Data. Re-include C# source only.
+!/src/VPHelper.Core/Data/
+!/src/VPHelper.Core/Data/*.cs
 **/WebView2/
 **/EBWebView/
 *.db

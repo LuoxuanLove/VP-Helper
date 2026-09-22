@@ -37,7 +37,8 @@ def main() -> None:
             raise SystemExit(f"Refusing to overwrite an existing reviewed fixture: {output.name}")
         output.parent.mkdir(parents=True, exist_ok=True)
         raw = source.read_bytes()
-        data = sanitize(raw.decode("utf-8-sig")).encode("utf-8") if source.suffix == ".html" else raw
+        text = raw.decode("utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
+        data = (sanitize(text) if source.suffix == ".html" else text).encode("utf-8")
         output.write_bytes(data)
         manifest.append({"path": name, "sha256": hashlib.sha256(data).hexdigest()})
     (target / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

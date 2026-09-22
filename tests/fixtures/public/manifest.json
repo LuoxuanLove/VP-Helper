@@ -29,11 +29,11 @@
   },
   {
     "path": "srk/config.yaml",
-    "sha256": "67adca488f8b67c39653e7c9a5bc5cb3a57021eb01a831861075482b75631d3c"
+    "sha256": "0d7ea82280fca282e81307b36e054015ef93d9ccb2801d7b62e5c0ea02d45028"
   },
   {
     "path": "srk/gzcpc2024.srk.json",
-    "sha256": "82ec7762b871a74acfdd6ebcb98e664b5275b9e4a688afd6a3ccb0cb6e0625f7"
+    "sha256": "0fdee6cf840a1441b2cec0811e13a1a9d6cce9b72c01f8e07bc2a89d444e62b2"
   },
   {
     "path": "srk/icpc2023macau.srk.json",

@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="VPHelper.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar drag region -->
+        <Border x:Name="AppTitleBar"
+                Grid.Row="0"
+                Height="48"
+                VerticalAlignment="Top"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0" Spacing="10">
+                <Image Source="ms-appx:///Assets/AppIcon20.png"
+                       Width="20" Height="20" Stretch="None"
+                       UseLayoutRounding="True" />
+                <TextBlock Text="VP Helper" VerticalAlignment="Center"
+                           FontSize="13" FontWeight="SemiBold" />
+            </StackPanel>
+        </Border>
+
+        <!-- NavigationView with bindable pane width -->
+        <muxc:NavigationView
+            x:Name="Nav"
+            Grid.Row="1"
+            PaneDisplayMode="Auto"
+            ExpandedModeThresholdWidth="1280"
+            CompactModeThresholdWidth="640"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            CompactPaneLength="48"
+            OpenPaneLength="{x:Bind NavPaneWidth, Mode=OneWay}"
+            SelectionChanged="Nav_SelectionChanged"
+            DisplayModeChanged="OnNavDisplayModeChanged"
+            Loaded="Nav_Loaded">
+
+            <muxc:NavigationView.MenuItems>
+                <muxc:NavigationViewItem Content="统计概览" Tag="dashboard">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D9;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="VP 比赛" Tag="contests">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8A1;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="官方比赛" Tag="gymdirectory">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8FD;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="比赛关联" Tag="official">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE71B;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+            </muxc:NavigationView.MenuItems>
+
+            <muxc:NavigationView.FooterMenuItems>
+                <muxc:NavigationViewItem Content="账号管理" Tag="login">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8FA;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+            </muxc:NavigationView.FooterMenuItems>
+
+            <muxc:NavigationView.PaneFooter>
+                <TextBlock x:Name="AttributionText"
+                           Visibility="{Binding IsPaneOpen, ElementName=Nav, Converter={StaticResource BoolToVisibility}}"
+                           Margin="14,8,14,12"
+                           TextWrapping="Wrap"
+                           Opacity="0.7"
+                           FontSize="11" />
+            </muxc:NavigationView.PaneFooter>
+
+            <Frame x:Name="ContentFrame" />
+        </muxc:NavigationView>
+
+        <!-- Pane resize handle: a 6px-wide translucent strip overlaid at the right edge of the nav
+             pane. PointerEntered changes the cursor; PointerPressed + PointerMoved update the
+             width; PointerReleased persists the new width. -->
+        <Border x:Name="PaneResizeHandle"
+                Grid.Row="1"
+                Width="6"
+                HorizontalAlignment="Left"
+                Background="Transparent"
+                Margin="{x:Bind PaneResizeMargin, Mode=OneWay}"
+                PointerEntered="OnResizePointerEntered"
+                PointerExited="OnResizePointerExited"
+                PointerPressed="OnResizePointerPressed"
+                PointerMoved="OnResizePointerMoved"
+                PointerReleased="OnResizePointerReleased"
+                PointerCaptureLost="OnResizePointerReleased">
+            <!-- Subtle visual indicator — a 2px accent-colored line centered in the handle zone -->
+            <Rectangle Width="2" HorizontalAlignment="Center"
+                       RadiusX="1" RadiusY="1"
+                       Opacity="0"
+                       x:Name="ResizeIndicator"
+                       Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+        </Border>
+    </Grid>
+</Window>

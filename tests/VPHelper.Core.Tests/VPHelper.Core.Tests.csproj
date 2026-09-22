@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\VPHelper.Core\VPHelper.Core.csproj" />
+    <Compile Include="..\..\src\VPHelper.WinUI\ViewModels\ObservableObject.cs" Link="ViewModels\ObservableObject.cs" />
+    <Compile Include="..\..\src\VPHelper.WinUI\ViewModels\GymDirectoryViewModel.cs" Link="ViewModels\GymDirectoryViewModel.cs" />
+    <Compile Include="..\..\src\VPHelper.WinUI\Services\WindowLayoutPolicy.cs" Link="Layout\WindowLayoutPolicy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\fixtures\public\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="fixtures\public" />
+  </ItemGroup>
+
+</Project>

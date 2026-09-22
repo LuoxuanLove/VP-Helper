@@ -1,0 +1,42 @@
+[
+  {
+    "path": "gym_submissions_p1.html",
+    "sha256": "886fb598580114d66d3df635989d617f565bac96ea4c402d5cb93593187de222"
+  },
+  {
+    "path": "gym_submissions_p2.html",
+    "sha256": "1a29887bfe5b29628d2f88278a6d7422eb27223feadc8536b871f2d123ff7fc2"
+  },
+  {
+    "path": "real_submissions.html",
+    "sha256": "0a654fe655b7f50ea7615a97be12f5e6bb060cc6cc91303a5a0934785796b61e"
+  },
+  {
+    "path": "LuoxuanLove - User profile - QOJ.ac.html",
+    "sha256": "d10cb984c13840488da001a680feadd1c05c74bfec915d74be10fc0cb640efee"
+  },
+  {
+    "path": "Submissions - QOJ.ac.html",
+    "sha256": "df483875cd1091b72e01f51d3421fdd11ebc3327f9f33bc41c18ffbfa595bf7d"
+  },
+  {
+    "path": "Submissions2 - QOJ.ac.html",
+    "sha256": "8e783112c8dc09dbe7c8ce9e8905a5e09cab712d8df86a5449bf26e1ab953374"
+  },
+  {
+    "path": "第十一届中国大学生程序设计竞赛 哈尔滨站（CCPC 2025 Harbin Site） - Submissions - Contest - QOJ.ac.html",
+    "sha256": "8032b5fcab60103ccebaeee918cd3f287364cf8f8d6ff1c8bc57645df7fb1426"
+  },
+  {
+    "path": "srk/config.yaml",
+    "sha256": "67adca488f8b67c39653e7c9a5bc5cb3a57021eb01a831861075482b75631d3c"
+  },
+  {
+    "path": "srk/gzcpc2024.srk.json",
+    "sha256": "82ec7762b871a74acfdd6ebcb98e664b5275b9e4a688afd6a3ccb0cb6e0625f7"
+  },
+  {
+    "path": "srk/icpc2023macau.srk.json",
+    "sha256": "4aab1ffc516d3a28e732433732962b1cd8d25605c5842807a83bcc04275ffddb"
+  }
+]

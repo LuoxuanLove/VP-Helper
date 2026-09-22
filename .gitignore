@@ -1,0 +1,45 @@
+# Local build output and release artifacts
+**/bin/
+**/obj/
+/out/
+/artifacts/
+/dist/
+/TestResults/
+**/TestResults/
+*.binlog
+*.pdb
+*.user
+*.suo
+.vs/
+
+# User databases, browser profiles, diagnostics and credentials
+**/data/
+**/WebView2/
+**/EBWebView/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key
+*.pem
+**/ui_settings.json
+
+# Keep raw, possibly authenticated browser captures local. Only sanitized fixtures are tracked.
+/tests/fixtures/*
+!/tests/fixtures/public/
+/tests/fixtures/public/**/*_files/
+
+# Agent state, local screenshots and generated design studies
+/.agents/
+/.codex/
+/ui-style-showcase.png
+__pycache__/
+*.py[cod]
+Thumbs.db
+.DS_Store

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VPHelper.Core/VPHelper.Core.csproj" />
+    <Project Path="src/VPHelper.WinUI/VPHelper.WinUI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VPHelper.Core.Tests/VPHelper.Core.Tests.csproj" />
+  </Folder>
+</Solution>

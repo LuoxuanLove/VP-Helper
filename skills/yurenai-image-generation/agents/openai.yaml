@@ -1,0 +1,4 @@
+interface:
+  display_name: "Yurenai Image Generation"
+  short_description: "Generate images through the Yurenai OpenAI-compatible API."
+  default_prompt: "Use $yurenai-image-generation to generate and save an image from this prompt."

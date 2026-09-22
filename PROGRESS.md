@@ -1,5 +1,16 @@
 # VP Helper — 进度与自检清单
 
+## 2026-09-22：Git 初始化与发行准备
+
+- 已初始化 `main`，分开提交源码基线、发行工具及验证修复；没有创建 GitHub 远程仓库、推送代码或发布 Release。
+- `.gitignore` 隔离构建输出、数据库、WebView2 登录状态、日志、截图、原始网页和本地 Agent 状态。Windows 对路径大小写不敏感，因此特别保留 `src/VPHelper.Core/Data/*.cs`，并用源码遗漏检查与干净源码构建验证。
+- 10 个可提交测试样本位于 `tests/fixtures/public/`；HTML 移除活动脚本、外部资源和认证令牌，原始副本仍保留本地。357 项非 Live 测试从 Git 导出的新目录全部通过。
+- 新增 README、安装/升级指南、GitHub 发布方案、第三方来源与许可副本，以及 main/PR CI、标签触发的 Draft Release 工作流。自动化在本地已检查，但 GitHub runner 尚未执行。
+- `tools/Publish-Portable.ps1` 从干净 Git HEAD 导出源码，测试后发布 WinUI x64 自包含目录，附带 40 个 NuGet 包的许可声明/材料、安装说明、版本和提交信息，生成程序 ZIP、源码 ZIP 与 SHA-256。拒绝复用版本目录、脏工作区和夹带运行数据的包。
+- 本地成功样包：`artifacts/releases/0.1.0-preview.3/VPHelper-0.1.0-preview.3-win-x64.zip`，70,457,732 字节（约 67.2 MiB），对应源码提交 `1b73e10328917f63e99a5e153f655d5e0ec8ed62`。357 项离线测试、ZIP CRC、两个 ZIP 的 SHA-256、519 个归档条目的数据排除检查全部通过。解压后在当前开发机成功启动并显示无账号的空数据库首页，没有执行登录或同步；原日常运行实例保持独立。
+- `.1` / `.2` 目录保留首次发行验证的失败证据，均没有被发布；修复了 Windows `Data` 源码忽略问题、WinUI WebView2 组件检查路径及 NuGet 运行时版本区间解析。
+- 稳定公开发行仍需：选定项目源码许可证、升级已结束支持的 Windows App SDK 1.5 及临近支持期末尾的 .NET 8、干净 Windows 安装验收、签名决策和首次 GitHub CI 实跑。详见 `docs/RELEASING.md`。
+
 ## 2026-09-22：官方比赛、页面交互与窗口约束
 
 - 官方比赛增加本地 VP / 仅练习 / 未 VP 状态、推算名次、账号与赛场成绩菜单，支持组合搜索筛选、空结果提示及重置。保留合并目录项的全部官方 ID；按平台隔离同号比赛，不将练习或零记录误写成 VP 排名。

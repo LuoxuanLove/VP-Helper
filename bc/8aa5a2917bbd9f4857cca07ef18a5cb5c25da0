@@ -1,0 +1,70 @@
+src/VPHelper.Core/Data/CuratedMappingGuard.cs
+  s_e3fcecb6c0012e::t_e7cb68f9fb4bc3 85
+  s_e3fcecb6c0012e::t_6c90036c32d089 23-24,28,30-45,54,61,120-125,128-144
+  s_e3fcecb6c0012e::t_5fe8bb1af2a63c 154
+  s_e3fcecb6c0012e::t_94c262f5bfc3ed 18
+  s_e3fcecb6c0012e::t_345129c228ea8e 1,72-84,86-119,126-127
+  s_e3fcecb6c0012e::t_5563f9613290a0 2-4,15-17
+  s_e3fcecb6c0012e::t_f5ee2bbe1c65c2 19-22
+  s_e3fcecb6c0012e::t_135c530ae132ad 25-27
+  s_e3fcecb6c0012e::t_fb66e10b9f14fc 29
+  s_e3fcecb6c0012e::t_a969274061c8ac 46-48,51-53
+  s_e3fcecb6c0012e::t_98834a92bbbbf4 55-60
+  s_e3fcecb6c0012e::t_2b9d6c7038982a 62-64,69-71
+  s_e3fcecb6c0012e::t_6dc3f31d692e65 145-147,151-153
+  s_e3fcecb6c0012e::t_21b6d0ff068a11 155
+src/VPHelper.Core/Data/DerivedDataGuard.cs
+  s_e3fcecb6c0012e::t_9644efeafa39ad 15
+  s_0fb04b9686518c::t_f99ebfc56b8885 23-24,43-64
+  s_e3fcecb6c0012e::t_54574e52c57786 67-89,96,108-114,117
+  s_e3fcecb6c0012e::t_9aa28751fcae40 26-34
+  s_e3fcecb6c0012e::t_0ebd8a29cf1efd 20,37,40,42,65,93-95,97-107,115-116,118-124
+  s_e3fcecb6c0012e::t_437e8b524ac182 12-14
+  s_e3fcecb6c0012e::t_0fc16324c0706b 16-19
+  s_e3fcecb6c0012e::t_1433d1fe6c3921 35-36
+  s_e3fcecb6c0012e::t_68fb93962fbcf4 38-39
+  s_e3fcecb6c0012e::t_9bd0bd0d62cc11 41
+  s_e3fcecb6c0012e::t_cce89297250379 66
+  s_e3fcecb6c0012e::t_eac84ab8037697 90-92
+  s_e3fcecb6c0012e::t_e1818bd37e1adb 125
+tools/check_repository.py
+  s_8323f616ae7bc7::t_ed8f36f07f9f89 23-25,47-52
+.gitignore
+  s_8323f616ae7bc7::t_ed8f36f07f9f89 17-19
+src/VPHelper.Core/Data/VpDbContext.cs
+  s_e3fcecb6c0012e::t_9644efeafa39ad 14-37
+  s_e3fcecb6c0012e::t_382c736ed678ea 11-13
+  s_e3fcecb6c0012e::t_91d70eb0b65941 38-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "bc8aa5a2917bbd9f4857cca07ef18a5cb5c25da0",
+  "prompts": {},
+  "sessions": {
+    "s_0fb04b9686518c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f4112-e01f-7c22-913e-1e96b8d021ff",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "LuoxuanLove <3055677006@qq.com>"
+    },
+    "s_8323f616ae7bc7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c840-15bb-7320-8f78-6d091c149595",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "LuoxuanLove <3055677006@qq.com>"
+    },
+    "s_e3fcecb6c0012e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f63d0-7e21-7401-9ddb-0d73d407dfeb",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "LuoxuanLove <3055677006@qq.com>"
+    }
+  }
+}

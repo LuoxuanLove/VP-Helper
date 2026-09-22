@@ -1,0 +1,21 @@
+tools/collect_package_licenses.py
+  s_8323f616ae7bc7::t_59db0ceec54bac 17-20
+tools/Publish-Portable.ps1
+  s_8323f616ae7bc7::t_59db0ceec54bac 45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1b73e10328917f63e99a5e153f655d5e0ec8ed62",
+  "prompts": {},
+  "sessions": {
+    "s_8323f616ae7bc7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c840-15bb-7320-8f78-6d091c149595",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "LuoxuanLove <3055677006@qq.com>"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+PROGRESS.md
+  s_8323f616ae7bc7::t_88d05c8f8961e4 7-8
+src/VPHelper.Core/VPHelper.Core.csproj
+  s_8323f616ae7bc7::t_598b86525f9c3a 17-18,20
+src/VPHelper.WinUI/VPHelper.WinUI.csproj
+  s_8323f616ae7bc7::t_f2d4746144b8ca 25,27
+tests/VPHelper.Core.Tests/VPHelper.Core.Tests.csproj
+  s_8323f616ae7bc7::t_b100bc04b25c75 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8fe2c9a569c777cb242832f7707728928273537a",
+  "prompts": {},
+  "sessions": {
+    "s_8323f616ae7bc7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c840-15bb-7320-8f78-6d091c149595",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "LuoxuanLove <3055677006@qq.com>"
+    }
+  }
+}

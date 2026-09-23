@@ -1,0 +1,21 @@
+PROGRESS.md
+  s_8323f616ae7bc7::t_b0c457b9001838 3-9
+src/VPHelper.Core/VPHelper.Core.csproj
+  s_8323f616ae7bc7::t_b475a157932ca7 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "7732d64259358c7461a6672cd42de99eb726c396",
+  "prompts": {},
+  "sessions": {
+    "s_8323f616ae7bc7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c840-15bb-7320-8f78-6d091c149595",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "LuoxuanLove <3055677006@qq.com>"
+    }
+  }
+}

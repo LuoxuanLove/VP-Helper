@@ -14,8 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Pin the native SQLite payload beyond the vulnerable <= 2.1.11 range. -->
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.13" />
     <PackageReference Include="AngleSharp" Version="1.5.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.31" />
     <PackageReference Include="YamlDotNet" Version="15.3.0" />
   </ItemGroup>
 

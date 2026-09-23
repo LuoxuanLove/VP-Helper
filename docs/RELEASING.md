@@ -2,7 +2,7 @@
 
 ## 推荐路线
 
-第一阶段使用 **私有源码仓库 + Windows x64 自包含便携 ZIP + GitHub Releases 草稿**。它与现有“EXE 同级 data 目录”的应用逻辑一致，无需管理员权限或安装器迁移。
+按作者 LuoxuanLove 于 2026-09-23 的明确授权，使用 **公开源码仓库 [LuoxuanLove/VP-Helper](https://github.com/LuoxuanLove/VP-Helper) + Windows x64 自包含便携 ZIP + GitHub Releases**。工作流先创建草稿，核验后发布预览版。它与现有“EXE 同级 data 目录”的应用逻辑一致，无需管理员权限或安装器迁移。此授权仅用于本项目，不影响其他项目的私有仓库要求。
 
 | 产物 | 放在哪里 | 面向谁 |
 | --- | --- | --- |
@@ -16,20 +16,19 @@
 
 ## 首次连接 GitHub
 
-本地已初始化 `main` 并有提交。**本次只准备本地仓库和发布工具，没有创建远程仓库或上传文件。**
+本地已初始化 `main`。当前公开发布目标固定为 `LuoxuanLove/VP-Helper`；下列命令仅用于首次建仓，不要对已有仓库重复执行。
 
 选定个人账号/组织及仓库名后，例如：
 
 ```powershell
 gh auth login
-# 将 OWNER/VP-Helper 换成实际目标；默认推荐先建私有仓库
-gh repo create OWNER/VP-Helper --private --source . --remote origin --push
+gh repo create LuoxuanLove/VP-Helper --public --source . --remote origin --push
 ```
 
 如已在 GitHub 网页创建空仓库：
 
 ```powershell
-git remote add origin https://github.com/OWNER/VP-Helper.git
+git remote add origin https://github.com/LuoxuanLove/VP-Helper.git
 git push -u origin main
 ```
 

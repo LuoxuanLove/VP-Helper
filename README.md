@@ -4,7 +4,9 @@ Windows 桌面的 Codeforces Gym / QOJ 虚拟参赛成绩分析工具。同步�
 
 ## 下载与使用
 
-目前仓库已准备发布流程，**尚未发布首个 GitHub 版本**。
+公开仓库：[LuoxuanLove/VP-Helper](https://github.com/LuoxuanLove/VP-Helper)。
+
+**[下载 Windows x64 预览版](https://github.com/LuoxuanLove/VP-Helper/releases)** · [安装与升级指南](docs/INSTALL.md)
 
 发布后，从仓库右侧 **Releases** 下载 `VPHelper-<版本>-win-x64.zip`，不要把 GitHub 自动生成的 `Source code.zip` 当成安装包。
 
@@ -30,7 +32,7 @@ Core/Tests 与 WinUI 是混合平台，请按项目构建。普通测试使用�
 
 ## 版本发布
 
-推荐先采用 **私有源码仓库 + Windows x64 便携 ZIP + GitHub Draft Release**。确认许可证、完成依赖升级和干净机器验证后，再决定公开仓库并发布稳定版本。
+采用 **公开源码仓库 + Windows x64 便携 ZIP + GitHub Releases**。标签工作流先创建草稿，验收附件后发布预览版。项目源码许可证尚未选定，当前公开可见不等于已授予 MIT 等开源许可；依赖升级和干净机器验收仍是稳定版前的工作。
 
 ```powershell
 # 要求工作区干净，直接从 Git HEAD 导出的源码构建，不能夹带本机登录数据

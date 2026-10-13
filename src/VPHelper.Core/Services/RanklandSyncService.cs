@@ -52,85 +52,79 @@ public class RanklandSyncService
     /// Sync official contests. <paramref name="maxContests"/> bounds a first run for responsiveness;
     /// pass null to fetch all leaves. Returns the number of contests persisted/refreshed.
     /// </summary>
+    public IReadOnlyList<string> FailedContests { get; private set; } = Array.Empty<string>();
+
     public async Task<int> SyncAsync(int? maxContests = null, bool forceRefresh = false,
         IProgress<RanklandProgress>? progress = null, CancellationToken ct = default)
     {
         var leaves = await _client.GetLeavesAsync(ct);
-        await UpsertCatalogAsync(leaves, ct);
-        await _db.SaveChangesAsync(ct);
-
-        var selected = maxContests is { } m ? leaves.Take(m).ToList() : leaves.ToList();
-
-        int done = 0, persisted = 0;
-        foreach (var leaf in selected)
-        {
-            ct.ThrowIfCancellationRequested();
-            done++;
-            progress?.Report(new RanklandProgress(done, selected.Count, leaf.Name));
-
-            // Skip if fetched recently unless forced (24h freshness window).
-            var existing = await _db.OfficialContests.FindAsync(new object?[] { leaf.Path }, ct);
-            if (!forceRefresh && existing != null &&
-                existing.FetchedAt > DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeSeconds())
-                continue;
-
-            ResolvedOfficial? resolved;
-            try
-            {
-                resolved = await _client.ResolveAsync(leaf, ct: ct);
-            }
-            catch
-            {
-                continue; // skip malformed/missing leaves
-            }
-            if (resolved == null) continue;
-
-            await PersistAsync(resolved, ct);
-            persisted++;
-        }
-
-        await _db.SaveChangesAsync(ct);
-        return persisted;
+        return await SyncLeavesAsync(maxContests is { } m ? leaves.Take(m).ToList() : leaves,
+            leaves, forceRefresh, progress, ct);
     }
 
-    /// <summary>
-    /// Fetch and persist one official contest by its srk-collection leaf id. This is used by detail
-    /// pages that need the full standing for an already-mapped contest even when only the lightweight
-    /// catalog has been synced so far.
-    /// </summary>
-    public async Task<bool> SyncOneAsync(string officialId, bool forceRefresh = false, CancellationToken ct = default)
+    /// <summary>Fetch one catalog for a whole batch; download up to four independent public files.</summary>
+    public async Task<int> SyncSelectedAsync(IEnumerable<string> ids, bool forceRefresh = false,
+        IProgress<RanklandProgress>? progress = null, CancellationToken ct = default)
     {
         var leaves = await _client.GetLeavesAsync(ct);
-        await UpsertCatalogAsync(leaves, ct);
+        var wanted = ids.ToHashSet(StringComparer.Ordinal);
+        var selected = leaves.Where(l => wanted.Contains(l.Path)).ToList();
+        var count = await SyncLeavesAsync(selected, leaves, forceRefresh, progress, ct);
+        FailedContests = FailedContests.Concat(wanted.Except(leaves.Select(l => l.Path))).ToList();
+        return count;
+    }
+
+    public async Task<bool> SyncOneAsync(string officialId, bool forceRefresh = false, CancellationToken ct = default)
+    {
+        await SyncSelectedAsync(new[] { officialId }, forceRefresh, ct: ct);
+        return FailedContests.Count == 0;
+    }
+
+    private async Task<int> SyncLeavesAsync(IReadOnlyList<RanklandLeaf> selected,
+        IReadOnlyList<RanklandLeaf> catalog, bool forceRefresh,
+        IProgress<RanklandProgress>? progress, CancellationToken ct)
+    {
+        await UpsertCatalogAsync(catalog, ct);
         await _db.SaveChangesAsync(ct);
-
-        var leaf = leaves.FirstOrDefault(l => string.Equals(l.Path, officialId, StringComparison.Ordinal));
-        if (leaf == null) return false;
-
-        var existing = await _db.OfficialContests.FindAsync(new object?[] { officialId }, ct);
-        var hasStanding = await _db.OfficialStandings.AnyAsync(s => s.OfficialId == officialId, ct);
-        var hasProblems = await _db.OfficialProblems.AnyAsync(p => p.OfficialId == officialId, ct);
-        if (!forceRefresh &&
-            hasStanding &&
-            hasProblems &&
-            existing != null &&
-            existing.FetchedAt > DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeSeconds())
-            return true;
-
-        ResolvedOfficial? resolved;
-        try
+        var freshSince = DateTimeOffset.UtcNow.AddDays(-1).ToUnixTimeSeconds();
+        var recent = (await _db.OfficialContests.Where(o => o.FetchedAt > freshSince)
+            .Select(o => o.Id).ToListAsync(ct)).ToHashSet();
+        var standings = (await _db.OfficialStandings.Select(s => s.OfficialId).Distinct().ToListAsync(ct)).ToHashSet();
+        var problems = (await _db.OfficialProblems.Select(s => s.OfficialId).Distinct().ToListAsync(ct)).ToHashSet();
+        var needed = selected.Where(l => forceRefresh || !recent.Contains(l.Path) ||
+            !standings.Contains(l.Path) || !problems.Contains(l.Path)).ToList();
+        var failed = new List<string>();
+        int done = selected.Count - needed.Count, persisted = 0;
+        progress?.Report(new RanklandProgress(done, selected.Count, "正在更新官方榜单"));
+        foreach (var batch in needed.Chunk(4))
         {
-            resolved = await _client.ResolveAsync(leaf, ct: ct);
+            var downloads = await Task.WhenAll(batch.Select(async leaf =>
+            {
+                try { return await _client.ResolveAsync(leaf, ct: ct); }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+                catch { return null; }
+            }));
+            for (int i = 0; i < batch.Length; i++)
+            {
+                ct.ThrowIfCancellationRequested();
+                if (downloads[i] is { } resolved)
+                {
+                    // SaveChanges is atomic: retain the previous complete standing until replacement succeeds.
+                    await PersistAsync(resolved, ct);
+                    await _db.SaveChangesAsync(ct);
+                    foreach (var entry in _db.ChangeTracker.Entries().Where(e =>
+                        e.Entity is OfficialStanding or OfficialProblem).ToList())
+                        entry.State = EntityState.Detached;
+                    persisted++;
+                }
+                else failed.Add(batch[i].Path);
+                done++;
+                progress?.Report(new RanklandProgress(done, selected.Count,
+                    $"{batch[i].Name} · 更新 {persisted} 场，失败 {failed.Count} 场"));
+            }
         }
-        catch
-        {
-            return false;
-        }
-        if (resolved == null) return false;
-
-        await PersistAsync(resolved, ct);
-        await _db.SaveChangesAsync(ct);
-        return true;
+        FailedContests = failed;
+        return persisted;
     }
 
     private async Task UpsertCatalogAsync(IReadOnlyList<RanklandLeaf> leaves, CancellationToken ct)
@@ -175,23 +169,26 @@ public class RanklandSyncService
 
         // Replace problem metadata and standings for this contest.
         var oldProblems = await _db.OfficialProblems.Where(p => p.OfficialId == r.Id).ToListAsync(ct);
-        if (oldProblems.Count > 0) _db.OfficialProblems.RemoveRange(oldProblems);
+        var aliases = new HashSet<string>(StringComparer.Ordinal);
         for (int i = 0; i < r.Ranklist.Problems.Count; i++)
         {
             var problem = r.Ranklist.Problems[i];
             var alias = string.IsNullOrWhiteSpace(problem.Alias)
                 ? ((char)('A' + i)).ToString()
                 : problem.Alias.Trim();
-            _db.OfficialProblems.Add(new OfficialProblem
+            aliases.Add(alias);
+            var entity = oldProblems.FirstOrDefault(p => p.Alias == alias);
+            if (entity == null)
             {
-                OfficialId = r.Id,
-                Alias = alias,
-                SortOrder = i,
-                Title = problem.Title,
-                AcceptedCount = problem.Accepted ?? 0,
-                SubmittedCount = problem.Submitted ?? 0,
-            });
+                entity = new OfficialProblem { OfficialId = r.Id, Alias = alias };
+                _db.OfficialProblems.Add(entity);
+            }
+            entity.SortOrder = i;
+            entity.Title = problem.Title;
+            entity.AcceptedCount = problem.Accepted ?? 0;
+            entity.SubmittedCount = problem.Submitted ?? 0;
         }
+        _db.OfficialProblems.RemoveRange(oldProblems.Where(p => !aliases.Contains(p.Alias)));
 
         var old = await _db.OfficialStandings.Where(s => s.OfficialId == r.Id).ToListAsync(ct);
         if (old.Count > 0) _db.OfficialStandings.RemoveRange(old);

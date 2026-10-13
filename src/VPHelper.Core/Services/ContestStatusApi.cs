@@ -83,6 +83,10 @@ public class ContestStatusApi
                 + $", bodyLen={result.Body?.Length ?? 0}"
                 + (string.IsNullOrEmpty(result.Message) ? string.Empty : $", msg={result.Message}"));
 
+            // CF returns useful FAILED/comment JSON with HTTP 400. Preserve it for the caller;
+            // repeating the identical request cannot repair an unavailable/private contest.
+            if (result.IsPermanentFailure) return result;
+
             switch (result.Status)
             {
                 case FetchStatus.Ok:

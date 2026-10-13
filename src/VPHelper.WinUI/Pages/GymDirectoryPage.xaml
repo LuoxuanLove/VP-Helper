@@ -15,7 +15,7 @@
                 <TextBlock Text="查找赛事、查看本地 VP 成绩与推算排名，再选择下一场训练。"
                            Style="{StaticResource AppPageDescriptionTextBlockStyle}"/>
             </StackPanel>
-            <Button Grid.Column="1" Content="刷新目录" Click="OnRefresh" VerticalAlignment="Center"
+            <Button Grid.Column="1" Content="更新目录和榜单" Click="OnRefresh" VerticalAlignment="Center"
                     IsEnabled="{x:Bind Vm.IsReady, Mode=OneWay}" Style="{StaticResource AppCompactButtonStyle}"
                     ToolTipService.ToolTip="从 Rankland 更新赛事目录，并重新读取本地参赛记录"/>
         </Grid>

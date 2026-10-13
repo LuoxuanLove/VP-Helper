@@ -143,6 +143,8 @@ public class SubmissionScraper
                 + $", bodyLen={result.Body?.Length ?? 0}"
                 + (string.IsNullOrEmpty(result.Message) ? string.Empty : $", msg={result.Message}"));
 
+            if (result.IsPermanentFailure) return null;
+
             switch (result.Status)
             {
                 case FetchStatus.Ok:

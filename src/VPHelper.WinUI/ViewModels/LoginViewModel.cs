@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.UI.Xaml.Controls;
 using VPHelper.Core.Data;
 using VPHelper.Core.Models;
+using VPHelper.Core.Rankland;
 using VPHelper.Core.Scraping;
 using VPHelper.Core.Services;
 
@@ -90,8 +91,11 @@ public sealed class LoginViewModel : ObservableObject
     private bool _hasConflicts;
     private CancellationTokenSource? _cts;
 
-    public LoginViewModel(BrowserFetcherHolder holder, IDbContextFactory<VpDbContext> dbFactory)
+    private readonly RanklandClient _ranklandClient;
+
+    public LoginViewModel(BrowserFetcherHolder holder, IDbContextFactory<VpDbContext> dbFactory, RanklandClient ranklandClient)
     {
+        _ranklandClient = ranklandClient;
         _holder = holder;
         _dbFactory = dbFactory;
     }
@@ -164,7 +168,7 @@ public sealed class LoginViewModel : ObservableObject
     public bool CanSyncQoj => QojState == LoginState.LoggedIn && !IsBusy && !string.IsNullOrWhiteSpace(QojHandle);
 
     // ---- shared properties ----
-    public bool IsBusy { get => _isBusy; set { if (SetProperty(ref _isBusy, value)) { NotifyCfSync(); NotifyQojSync(); } } }
+    public bool IsBusy { get => _isBusy; set { if (SetProperty(ref _isBusy, value)) { NotifyCfSync(); NotifyQojSync(); OnPropertyChanged(nameof(SyncTitle)); OnPropertyChanged(nameof(SyncSeverity)); } } }
     public double Progress { get => _progress; set => SetProperty(ref _progress, value); }
     public string SyncStatus
     {
@@ -185,6 +189,8 @@ public sealed class LoginViewModel : ObservableObject
             var text = SyncStatus;
             if (IsBusy || text.Contains("正在", StringComparison.Ordinal) || text.Contains("Page ", StringComparison.Ordinal))
                 return "同步进行中";
+            if (text.Contains("待补全", StringComparison.Ordinal) || text.Contains("待重试", StringComparison.Ordinal))
+                return "提交已保存，部分信息待补全";
             if (text.Contains("失败", StringComparison.Ordinal) || text.Contains("尚未就绪", StringComparison.Ordinal))
                 return "同步失败";
             if (text.Contains("验证", StringComparison.Ordinal))
@@ -201,7 +207,8 @@ public sealed class LoginViewModel : ObservableObject
             var text = SyncStatus;
             if (text.Contains("失败", StringComparison.Ordinal) || text.Contains("尚未就绪", StringComparison.Ordinal))
                 return InfoBarSeverity.Error;
-            if (text.Contains("验证", StringComparison.Ordinal) || text.Contains("取消", StringComparison.Ordinal))
+            if (text.Contains("验证", StringComparison.Ordinal) || text.Contains("取消", StringComparison.Ordinal) ||
+                text.Contains("待补全", StringComparison.Ordinal) || text.Contains("待重试", StringComparison.Ordinal))
                 return InfoBarSeverity.Warning;
             if (text.Contains("完成", StringComparison.Ordinal))
                 return InfoBarSeverity.Success;
@@ -329,9 +336,9 @@ public sealed class LoginViewModel : ObservableObject
                     TotalSubmissions = submissionCountByAccount.GetValueOrDefault((a.Platform, a.Handle)),
                     LastSyncCount = a.LastSyncCount,
                     LastSyncError = a.LastSyncError,
-                    LastSyncedText = a.LastSyncedAt is { } t and > 0
+                    LastSyncedText = a.LastCompletedAt is { } t and > 0
                         ? "上次同步 " + DateTimeOffset.FromUnixTimeSeconds(t).LocalDateTime.ToString("yyyy-MM-dd HH:mm")
-                        : "从未同步",
+                        : a.LastSyncedAt.HasValue ? "已有同步数据" : "从未同步",
                 });
 
             await RefreshConflictsAsync(db);
@@ -415,16 +422,26 @@ public sealed class LoginViewModel : ObservableObject
             var (scraper, api, cloneService) = _holder.CreateCfSyncPipeline();
             scraper.Diagnostics = diag;
             api.Diagnostics = diag;
+            cloneService.Diagnostics = diag;
+            api.CloudflareChallengeDetected += _ => { ReportCfSync("检测到 CF 验证…"); CloudflareChallenge?.Invoke(); };
             scraper.CloudflareChallengeDetected += _ => { ReportCfSync("检测到 CF 验证…"); CloudflareChallenge?.Invoke(); };
 
             await using var db = await _dbFactory.CreateDbContextAsync(_cts.Token);
             var sync = new GymSyncService(db, scraper, api, cloneService: cloneService);
-            var prog = new Progress<ScrapeProgress>(p => { ReportCfSync(p.Message); Progress = Math.Min(95, Progress + 5); });
+            var runToken = _cts.Token;
+            var prog = new Progress<ScrapeProgress>(p => { diag.Log(p.Message); if (IsBusy && _cts?.Token == runToken) ReportCfSync(p.Message); });
 
             ReportCfSync($"正在同步 {handle} 的 CF gym 提交…");
             int stored = await sync.SyncAsync(handle, prog, _cts.Token);
             Progress = 100;
-            ReportCfSync($"CF 同步完成，新增 {stored} 条提交；已刷新 VP 比赛列表。");
+            var extra = await FinishAccountSyncAsync(Platform.Codeforces, handle, status => { diag.Log(status); ReportCfSync(status); }, _cts.Token);
+            var pending = await db.Submissions.Where(s => s.Platform == Platform.Codeforces && s.Handle == handle &&
+                (s.ParticipantType == null || s.ParticipantType == "" ||
+                 ((s.ParticipantType == "VIRTUAL" || s.ParticipantType == "CONTESTANT") && s.RelativeTime == null)))
+                .Select(s => s.GymId).Distinct().CountAsync();
+            diag.Log($"=== CF full sync done: new={stored}, pendingTypeGyms={pending}; {extra} ===");
+            ReportCfSync($"CF 提交同步完成，新增 {stored} 条。{extra}" +
+                (pending > 0 ? $" {pending} 场参赛类型待补全，暂时失败的接口 6 小时后重试。" : string.Empty));
             await RefreshAccountsAsync();
             SyncCompleted?.Invoke();
         }
@@ -448,16 +465,18 @@ public sealed class LoginViewModel : ObservableObject
             await using var db = await _dbFactory.CreateDbContextAsync(_cts.Token);
             var sync = _holder.CreateQojSyncPipeline(db);
             sync.Diagnostics = new Services.FileScrapeDiagnostics(AppHost.DataFolder);
-            var prog = new Progress<ScrapeProgress>(p => { ReportQojSync(p.Message); Progress = Math.Min(95, Progress + 5); });
+            var runToken = _cts.Token;
+            var prog = new Progress<ScrapeProgress>(p => { if (IsBusy && _cts?.Token == runToken) ReportQojSync(p.Message); });
 
             ReportQojSync($"正在同步 {handle} 的 QOJ 提交…");
             int stored = await sync.SyncAsync(handle, prog, _cts.Token);
             var total = await db.Submissions
                 .CountAsync(s => s.Platform == Platform.Qoj && s.Handle == handle, _cts.Token);
             Progress = 100;
+            var extra = await FinishAccountSyncAsync(Platform.Qoj, handle, ReportQojSync, _cts.Token);
             ReportQojSync(stored > 0
-                ? $"QOJ 同步完成，新增 {stored} 条提交，当前共 {total} 条；已刷新 VP 比赛列表。"
-                : $"QOJ 同步完成，没有新提交，当前共 {total} 条；已刷新 VP 比赛列表。");
+                ? $"QOJ 同步完成，新增 {stored} 条提交，当前共 {total} 条。{extra}"
+                : $"QOJ 同步完成，没有新提交，当前共 {total} 条。{extra}");
             await RefreshAccountsAsync();
             SyncCompleted?.Invoke();
         }
@@ -469,6 +488,36 @@ public sealed class LoginViewModel : ObservableObject
             await RefreshAccountsAsync();
         }
         finally { IsBusy = false; _cts?.Dispose(); _cts = null; }
+    }
+
+    private async Task<string> FinishAccountSyncAsync(Platform platform, string handle, Action<string> report, CancellationToken ct)
+    {
+        await using var db = await _dbFactory.CreateDbContextAsync(ct);
+        var account = await db.Accounts.FindAsync(new object[] { platform, handle }, ct);
+        if (account != null) account.LastCompletedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        await db.SaveChangesAsync(ct);
+        await RefreshAccountsAsync();
+        SyncCompleted?.Invoke();
+        bool acceptingProgress = true;
+        try
+        {
+            var progress = new Progress<RanklandProgress>(p =>
+            {
+                if (acceptingProgress) report(p.Total > 0 ? $"榜单 {p.Done}/{p.Total}：{p.Message}" : p.Message);
+            });
+            var result = await new PostSyncService(db, _ranklandClient).RunAsync(platform, handle, progress, ct);
+            return $"已自动关联，更新 {result.Updated} 场榜单" +
+                (result.Failed > 0 ? $"；{result.Failed} 场榜单待重试。" : "。");
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return "提交已保存，后续榜单更新已取消。";
+        }
+        catch (Exception ex)
+        {
+            return $"提交已保存，自动关联或榜单更新待重试：{ex.Message}";
+        }
+        finally { acceptingProgress = false; }
     }
 
     private async Task RecordSyncFailureAsync(Platform platform, string handle, string error)

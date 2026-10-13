@@ -39,6 +39,7 @@ public sealed class WebView2BrowserFetcher : IBrowserFetcher
 
     public async Task<FetchResult> FetchAsync(string url, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var token = Guid.NewGuid().ToString("N");
         var tcs = new TaskCompletionSource<FetchResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         _pending[token] = new PendingFetch(url, tcs);
@@ -70,10 +71,19 @@ public sealed class WebView2BrowserFetcher : IBrowserFetcher
             {
                 if (_pending.TryRemove(token, out var p)) p.Tcs.TrySetCanceled();
             }))
-                return await tcs.Task.ConfigureAwait(false);
+                return await tcs.Task.WaitAsync(TimeSpan.FromSeconds(35), ct).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            return new FetchResult(url, null, FetchStatus.Error, "请求超时（35 秒）");
         }
         finally
         {
+            _dispatcher.TryEnqueue(async () =>
+            {
+                try { await _core.ExecuteScriptAsync($"window.__vpFetchControllers?.[{JsSafe(token)}]?.abort()"); }
+                catch { /* Browser may already be closed or navigated. */ }
+            });
             _pending.TryRemove(token, out _);
         }
     }
@@ -85,14 +95,17 @@ public sealed class WebView2BrowserFetcher : IBrowserFetcher
     private static string BuildScript(string url, string token) => $@"
 (async () => {{
   const token = {JsSafe(token)};
+  const controller = new AbortController();
+  (window.__vpFetchControllers ??= {{}})[token] = controller;
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {{
-    const resp = await fetch({JsSafe(url)}, {{ credentials: 'include', redirect: 'follow' }});
+    const resp = await fetch({JsSafe(url)}, {{ credentials: 'include', redirect: 'follow', signal: controller.signal }});
     const text = await resp.text();
     const cfMitigated = resp.headers.get('cf-mitigated') || '';
     window.chrome.webview.postMessage(JSON.stringify({{ token, status: resp.status, cf: cfMitigated, body: text }}));
   }} catch (e) {{
     window.chrome.webview.postMessage(JSON.stringify({{ token, status: -1, cf: '', body: '', error: String(e) }}));
-  }}
+  }} finally {{ clearTimeout(timer); delete window.__vpFetchControllers[token]; }}
 }})()";
 
     private void OnWebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -123,7 +136,7 @@ public sealed class WebView2BrowserFetcher : IBrowserFetcher
             return new FetchResult(url, null, FetchStatus.RateLimited, "HTTP 429");
         if (envelope.Status < 0 || envelope.Status >= 400)
             return new FetchResult(url, envelope.Body, FetchStatus.Error,
-                string.IsNullOrEmpty(envelope.Error) ? $"HTTP {envelope.Status}" : envelope.Error);
+                string.IsNullOrEmpty(envelope.Error) ? $"HTTP {envelope.Status}" : envelope.Error, envelope.Status);
 
         return new FetchResult(url, envelope.Body, FetchStatus.Ok);
     }

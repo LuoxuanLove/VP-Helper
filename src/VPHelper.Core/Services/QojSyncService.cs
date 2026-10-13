@@ -251,6 +251,16 @@ public class QojSyncService
         foreach (var contest in contests)
         {
             ct.ThrowIfCancellationRequested();
+            var cache = new SyncRetryCache(_db);
+            var cacheKey = $"qoj-problems-fresh:{contest.ContestId}";
+            var cached = await _db.QojContestProblems.Where(p => p.ContestId == contest.ContestId).ToListAsync(ct);
+            if (cached.Count > 0 && await cache.IsCoolingDownAsync(cacheKey, ct))
+            {
+                results[contest.ContestId] = cached.ToDictionary(p => p.ProblemId,
+                    p => new QojContestProblemDefinition(p.ContestId, p.ProblemId, p.ProblemIndex, p.Title ?? string.Empty, p.ProblemUrl ?? string.Empty));
+                Diagnostics?.Log($"Contest {contest.ContestId}: reused {cached.Count} cached problem definitions");
+                continue;
+            }
             var result = await FetchWithRetryAsync(BuildContestDashboardUrl(contest.ContestId), ct).ConfigureAwait(false);
             if (result == null) continue;
 
@@ -264,6 +274,7 @@ public class QojSyncService
             var byId = definitions.ToDictionary(p => p.ProblemId, StringComparer.Ordinal);
             results[contest.ContestId] = byId;
             await UpsertContestProblemsAsync(definitions, ct).ConfigureAwait(false);
+            await cache.SetAsync(cacheKey, TimeSpan.FromDays(7), ct);
             Diagnostics?.Log($"Contest {contest.ContestId}: loaded {definitions.Count} problem definition(s)");
         }
 
@@ -574,6 +585,8 @@ public class QojSyncService
             }
 
             Diagnostics?.Log($"Fetch {url}: attempt={attempt + 1}/{_backoff.MaxRetries + 1}, status={result.Status}, bodyLen={result.Body?.Length ?? 0}, message='{result.Message ?? ""}'");
+
+            if (result.IsPermanentFailure) return null;
 
             switch (result.Status)
             {

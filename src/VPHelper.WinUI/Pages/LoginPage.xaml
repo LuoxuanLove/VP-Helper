@@ -229,7 +229,9 @@
                          Severity="{x:Bind Vm.SyncSeverity, Mode=OneWay}"
                          Title="{x:Bind Vm.SyncTitle, Mode=OneWay}"
                          Message="{x:Bind Vm.SyncStatus, Mode=OneWay}" />
-                <ProgressBar Value="{x:Bind Vm.Progress, Mode=OneWay}" Maximum="100"
+                <Button Content="取消同步" Click="OnCancelSync" HorizontalAlignment="Right"
+                        Visibility="{x:Bind Vm.IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                <ProgressBar IsIndeterminate="True"
                              Visibility="{x:Bind Vm.IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>
         </Grid>

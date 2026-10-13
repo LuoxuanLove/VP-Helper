@@ -1,0 +1,91 @@
+tests/VPHelper.Core.Tests/RanklandSyncServiceTests.cs
+  s_8323f616ae7bc7::t_f7758aa50fb12c 112-158
+src/VPHelper.Core/Services/SyncRetryCache.cs
+  s_8323f616ae7bc7::t_f1b3ebebea25c5 1-33
+src/VPHelper.Core/Services/RanklandSyncService.cs
+  s_8323f616ae7bc7::t_cfbcb9af18fdae 55-56,61-63,65-74,79-81,83-88,91-99,101-124,126-127,172,179-181,183-189,191
+  s_8323f616ae7bc7::t_c3fd51f84af5c7 89-90
+DESIGN.md
+  s_8323f616ae7bc7::t_6daaa16389f5a6 298-307,378,381-382
+tools/VPHelper.Maintenance/README.md
+  s_8323f616ae7bc7::t_6daaa16389f5a6 1-11
+README.md
+  s_8323f616ae7bc7::t_6daaa16389f5a6 17
+  s_8323f616ae7bc7::t_d477cbc945b2da 31
+  s_8323f616ae7bc7::t_c4410bec4a5503 37
+  s_8323f616ae7bc7::t_39d860eda11c86 32-36,38
+src/VPHelper.Core/Services/GymSyncService.cs
+  s_8323f616ae7bc7::t_78fa6bbdf616b1 106,165-169,194,197,273-279,281-286
+  s_8323f616ae7bc7::t_af023b2ac885a5 170-178
+docs/releases/v0.1.0-preview.7.md
+  s_8323f616ae7bc7::t_05706644221d36 1-39
+src/VPHelper.WinUI/Pages/LoginPage.xaml
+  s_8323f616ae7bc7::t_78fa6bbdf616b1 232-234
+src/VPHelper.WinUI/Services/WebView2BrowserFetcher.cs
+  s_8323f616ae7bc7::t_af023b2ac885a5 42,82-86,99,108
+  s_8323f616ae7bc7::t_78fa6bbdf616b1 74-78,98,100,102,139
+tests/VPHelper.Core.Tests/GymDirectoryViewModelTests.cs
+  s_8323f616ae7bc7::t_58eba8f18ab7ed 32,38
+tools/VPHelper.Maintenance/Program.cs
+  s_8323f616ae7bc7::t_dd9e71aa3cf626 1-49
+PROGRESS.md
+  s_8323f616ae7bc7::t_861097b9b668b3 205-209
+  s_8323f616ae7bc7::t_1f94524c640d9c 210
+  s_8323f616ae7bc7::t_6daaa16389f5a6 192-204
+tools/VPHelper.Maintenance/VPHelper.Maintenance.csproj
+  s_8323f616ae7bc7::t_dd9e71aa3cf626 1-11
+src/VPHelper.Core/Services/QojSyncService.cs
+  s_8323f616ae7bc7::t_58eba8f18ab7ed 254-263,277,589-590
+src/VPHelper.WinUI/ViewModels/LoginViewModel.cs
+  s_8323f616ae7bc7::t_c4410bec4a5503 437,442
+  s_8323f616ae7bc7::t_80caebb534b9ed 11,94-96,98,339,341,425-426,476,478-479,493-500,502-503,508-519,521-522
+  s_8323f616ae7bc7::t_af023b2ac885a5 171,192-193,210-211,438-441,443-444
+  s_8323f616ae7bc7::t_2e86a44b6044a2 431-432,468-469,501,504-507,520
+src/VPHelper.WinUI/AppHost.cs
+  s_8323f616ae7bc7::t_58eba8f18ab7ed 125-127,140
+src/VPHelper.WinUI/Pages/GymDirectoryPage.xaml
+  s_8323f616ae7bc7::t_555cb0cfe37da7 18
+src/VPHelper.Core/Scraping/IBrowserFetcher.cs
+  s_8323f616ae7bc7::t_f1b3ebebea25c5 26-27,30-32
+src/VPHelper.WinUI/ViewModels/GymDirectoryViewModel.cs
+  s_8323f616ae7bc7::t_78fa6bbdf616b1 98
+  s_8323f616ae7bc7::t_f3199bebcaf840 231-239
+  s_8323f616ae7bc7::t_555cb0cfe37da7 240-242
+src/VPHelper.WinUI/Pages/LoginPage.xaml.cs
+  s_8323f616ae7bc7::t_78fa6bbdf616b1 357-358
+src/VPHelper.Core/Services/GymCloneService.cs
+  s_8323f616ae7bc7::t_f1b3ebebea25c5 6,19-28,54-62,104,108-109
+  s_8323f616ae7bc7::t_276405815d4e15 110
+src/VPHelper.Core/Models/Entities.cs
+  s_8323f616ae7bc7::t_80caebb534b9ed 48-49
+src/VPHelper.Core/Scraping/SubmissionScraper.cs
+  s_8323f616ae7bc7::t_58eba8f18ab7ed 146-147
+tests/VPHelper.Core.Tests/SyncReliabilityTests.cs
+  s_8323f616ae7bc7::t_3fb0d829f5ce08 72-90
+  s_8323f616ae7bc7::t_6e9a0c55aaf97e 1-71,91-108
+src/VPHelper.Core/Rankland/HttpRawContentSource.cs
+  s_8323f616ae7bc7::t_af023b2ac885a5 65-75
+src/VPHelper.Core/Services/ContestStatusApi.cs
+  s_8323f616ae7bc7::t_f1b3ebebea25c5 86-89
+tools/Start-Dev.ps1
+  s_8323f616ae7bc7::t_60e01888aa5b30 1-23,26-28
+  s_8323f616ae7bc7::t_d477cbc945b2da 24-25
+src/VPHelper.Core/Services/PostSyncService.cs
+  s_8323f616ae7bc7::t_d1767e7172a5d9 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2ca23f3f7b8183582e10b1d82ddca9857fad0536",
+  "prompts": {},
+  "sessions": {
+    "s_8323f616ae7bc7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c840-15bb-7320-8f78-6d091c149595",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "LuoxuanLove <3055677006@qq.com>"
+    }
+  }
+}

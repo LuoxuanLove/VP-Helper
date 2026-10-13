@@ -354,6 +354,8 @@ public sealed partial class LoginPage : Page
 
     // ---- sync buttons ----------------------------------------------------------
 
+    private void OnCancelSync(object sender, RoutedEventArgs e) => Vm.Cancel();
+
     private async void OnSyncCf(object sender, RoutedEventArgs e) => await Vm.SyncCfAsync();
     private async void OnSyncQoj(object sender, RoutedEventArgs e) => await Vm.SyncQojAsync();
 

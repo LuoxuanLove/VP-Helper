@@ -95,7 +95,7 @@ public class GymDirectoryViewModel : ObservableObject
     public bool HasWarning => !string.IsNullOrEmpty(Status);
     public bool ShowEmpty => !IsLoading && Items.Count == 0;
     public string Summary => $"显示 {Items.Count} / {_allItems.Count} 场 · " +
-        (_allItems.Any(i => !i.ParticipationAvailable) ? "VP 状态暂不可用" : $"已 VP {_allItems.Count(i => i.HasVp)} 场");
+        (Items.Any(i => !i.ParticipationAvailable) ? "VP 状态暂不可用" : $"其中已 VP {Items.Count(i => i.HasVp)} 场");
 
     public string Status
     {
@@ -228,7 +228,18 @@ public class GymDirectoryViewModel : ObservableObject
     {
         var sync = new RanklandSyncService(db, _ranklandClient);
         var currentLeaves = await sync.GetCatalogLeavesAsync();
-        await sync.SyncCatalogAsync();
+        bool acceptingProgress = true;
+        try
+        {
+            await sync.SyncAsync(forceRefresh: true, progress: new Progress<RanklandProgress>(p =>
+            {
+                if (acceptingProgress) Status = $"正在更新目录和榜单 {p.Done}/{p.Total}：{p.Message}";
+            }));
+        }
+        finally { acceptingProgress = false; }
+        await new MappingService(db).AutoMatchAllAsync();
+        if (sync.FailedContests.Count > 0)
+            _loadWarning = $"{sync.FailedContests.Count} 场榜单更新失败，已保留原有数据，可再次更新重试。";
 
         var currentIds = currentLeaves
             .Select(leaf => leaf.Path)

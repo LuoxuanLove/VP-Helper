@@ -23,9 +23,13 @@ public record FetchResult(
     string Url,
     string? Body,
     FetchStatus Status,
-    string? Message = null)
+    string? Message = null,
+    int? HttpStatusCode = null)
 {
     public bool IsSuccess => Status == FetchStatus.Ok;
+    public bool IsPermanentFailure => Status == FetchStatus.Error &&
+        (HttpStatusCode is >= 400 and < 500 and not 408 and not 429 ||
+         Message is "HTTP 400" or "HTTP 401" or "HTTP 403" or "HTTP 404" or "HTTP 410");
 }
 
 public enum FetchStatus

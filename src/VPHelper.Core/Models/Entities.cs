@@ -45,6 +45,8 @@ public class Account
     public string Handle { get; set; } = string.Empty;
     /// <summary>Unix seconds of the newest submission seen at last sync (incremental watermark).</summary>
     public long? LastSyncedAt { get; set; }
+    /// <summary>Wall-clock completion time, independent of the newest-submission watermark.</summary>
+    public long? LastCompletedAt { get; set; }
     /// <summary>New submissions stored in the most recent sync run (0 = nothing new / no run yet).</summary>
     public int LastSyncCount { get; set; }
     /// <summary>Error message from the last sync run; null = last sync succeeded or never ran.</summary>

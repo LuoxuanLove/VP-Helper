@@ -29,11 +29,13 @@ public class GymDirectoryViewModelTests
         Assert.Equal(0, source.Calls);
         vm.SearchText = "icpc2023macau";
         var row = Assert.Single(vm.Items);
+        Assert.Contains("其中已 VP 1 场", vm.Summary);
         Assert.Equal("已 VP", row.ParticipationText);
         Assert.Equal("待加载榜单", row.RankText);
         vm.ParticipationFilter = 2;
         Assert.Empty(vm.Items);
         Assert.True(vm.ShowEmpty);
+        Assert.Contains("其中已 VP 0 场", vm.Summary);
         vm.ParticipationFilter = 1;
         Assert.Single(vm.Items);
         db.OfficialStandings.Add(new OfficialStanding { OfficialId = "icpc2023macau", SolvedCount = 3, Official = true });

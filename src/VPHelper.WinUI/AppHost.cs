@@ -122,9 +122,9 @@ public sealed class BrowserFetcherHolder
     {
         if (CfFetcher == null) throw new InvalidOperationException("Codeforces login required before scraping.");
         var throttle = new Throttle(MinInterval);
-        var scraper = new SubmissionScraper(CfFetcher, throttle, new BackoffPolicy());
-        var api = new ContestStatusApi(CfFetcher, throttle, new BackoffPolicy());
-        var cloneService = new GymCloneService(CfFetcher, throttle, new BackoffPolicy());
+        var scraper = new SubmissionScraper(CfFetcher, throttle, new BackoffPolicy { MaxRetries = 2 });
+        var api = new ContestStatusApi(CfFetcher, throttle, new BackoffPolicy { MaxRetries = 2 });
+        var cloneService = new GymCloneService(CfFetcher, throttle, new BackoffPolicy { MaxRetries = 2 });
         return (scraper, api, cloneService);
     }
 
@@ -137,6 +137,6 @@ public sealed class BrowserFetcherHolder
     {
         if (QojFetcher == null) throw new InvalidOperationException("QOJ login required before scraping.");
         var throttle = new Throttle(MinInterval);
-        return new QojSyncService(db, QojFetcher, throttle, new BackoffPolicy());
+        return new QojSyncService(db, QojFetcher, throttle, new BackoffPolicy { MaxRetries = 2 });
     }
 }

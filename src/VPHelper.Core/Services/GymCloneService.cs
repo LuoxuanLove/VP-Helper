@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using VPHelper.Core.Scraping;
+using VPHelper.Core.Models;
 
 namespace VPHelper.Core.Services;
 
@@ -15,6 +16,16 @@ public class GymCloneService
     private readonly Throttle _throttle;
     private readonly BackoffPolicy _backoff;
     private readonly Func<TimeSpan, CancellationToken, Task> _delay;
+    private readonly Dictionary<long, GymCloneInfo?> _pages = new();
+    public IScrapeDiagnostics? Diagnostics { get; set; }
+
+    public void SeedCache(IEnumerable<GymContest> gyms)
+    {
+        foreach (var gym in gyms)
+            if (gym.Platform == Platform.Codeforces && gym.CloneCheckedAt.HasValue)
+                _pages[gym.GymId] = gym.CloneParentGymId is { } parent
+                    ? new GymCloneInfo(parent, gym.CloneParentTitle ?? string.Empty) : null;
+    }
 
     public GymCloneService(
         IBrowserFetcher fetcher,
@@ -40,11 +51,15 @@ public class GymCloneService
         for (int depth = 0; depth < MaxDepth; depth++)
         {
             visitedOrder.Add(current);
-            var html = await FetchGymPageAsync(current, ct).ConfigureAwait(false);
-            if (html == null)
-                return new GymCloneChain(edges, visitedOrder, null, IsComplete: false);
-
-            var clone = GymCloneParser.Parse(html);
+            ct.ThrowIfCancellationRequested();
+            if (!_pages.TryGetValue(current, out var clone))
+            {
+                var html = await FetchGymPageAsync(current, ct).ConfigureAwait(false);
+                if (html == null)
+                    return new GymCloneChain(edges, visitedOrder, null, IsComplete: false);
+                clone = GymCloneParser.Parse(html);
+                _pages[current] = clone;
+            }
             if (clone == null)
             {
                 root = current == gymId ? null : current;
@@ -86,8 +101,12 @@ public class GymCloneService
                 result = new FetchResult(url, null, FetchStatus.Error, ex.Message);
             }
 
+            Diagnostics?.Log($"clone gym {gymId}: attempt={attempt + 1}, status={result.Status}, message={result.Message}");
             if (result.Status == FetchStatus.Ok)
                 return result.Body;
+
+            if (result.IsPermanentFailure || result.Status == FetchStatus.CloudflareChallenge)
+                return null;
 
             if (attempt == _backoff.MaxRetries)
                 return null;

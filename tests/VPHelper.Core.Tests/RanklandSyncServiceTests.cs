@@ -109,4 +109,51 @@ root:
         Assert.Equal(2, leaves.Count);
         Assert.Empty(await db.OfficialContests.ToListAsync());
     }
+    [Fact]
+    public async Task RefreshExistingStanding_ReplacesProblemsWithoutTrackingConflict()
+    {
+        await using var conn = new SqliteConnection("DataSource=:memory:");
+        await conn.OpenAsync();
+        await using var db = new VpDbContext(new DbContextOptionsBuilder<VpDbContext>().UseSqlite(conn).Options);
+        await db.Database.EnsureCreatedAsync();
+        var service = new RanklandSyncService(db, new RanklandClient(new FakeRawContentSource()));
+        Assert.True(await service.SyncOneAsync("icpc2024nanjing", forceRefresh: true));
+        Assert.True(await service.SyncOneAsync("icpc2024nanjing", forceRefresh: true));
+        Assert.Equal(2, await db.OfficialProblems.CountAsync());
+        Assert.Equal(2, await db.OfficialContests.CountAsync());
+    }
+
+    [Fact]
+    public async Task PostSync_AutomaticallyMapsKnownQojContestAndLoadsProblems()
+    {
+        await using var conn = new SqliteConnection("DataSource=:memory:");
+        await conn.OpenAsync();
+        await using var db = new VpDbContext(new DbContextOptionsBuilder<VpDbContext>().UseSqlite(conn).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.GymContests.Add(new VPHelper.Core.Models.GymContest { Platform = VPHelper.Core.Models.Platform.Qoj, GymId = 1828, ProblemCount = 13 });
+        db.Submissions.Add(new VPHelper.Core.Models.Submission { Platform = VPHelper.Core.Models.Platform.Qoj, Id = 1, GymId = 1828, Handle = "alice" });
+        await db.SaveChangesAsync();
+        var result = await new PostSyncService(db, new RanklandClient(new FakeRawContentSource()))
+            .RunAsync(VPHelper.Core.Models.Platform.Qoj, "alice");
+        Assert.Equal(0, result.Failed);
+        Assert.Equal(1, result.Updated);
+        Assert.Equal("icpc2024nanjing", (await db.ContestMappings.SingleAsync()).OfficialId);
+        Assert.Equal(2, await db.OfficialProblems.CountAsync());
+    }
+
+    [Fact]
+    public async Task FailedDownload_KeepsExistingDataAndReportsFailure()
+    {
+        await using var conn = new SqliteConnection("DataSource=:memory:");
+        await conn.OpenAsync();
+        await using var db = new VpDbContext(new DbContextOptionsBuilder<VpDbContext>().UseSqlite(conn).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.OfficialStandings.Add(new VPHelper.Core.Models.OfficialStanding { OfficialId = "icpc2024shanghai", TeamName = "retained" });
+        await db.SaveChangesAsync();
+        var service = new RanklandSyncService(db, new RanklandClient(new FakeRawContentSource()));
+        Assert.False(await service.SyncOneAsync("icpc2024shanghai", forceRefresh: true));
+        Assert.Equal("retained", (await db.OfficialStandings.SingleAsync()).TeamName);
+        Assert.Contains("icpc2024shanghai", service.FailedContests);
+    }
+
 }

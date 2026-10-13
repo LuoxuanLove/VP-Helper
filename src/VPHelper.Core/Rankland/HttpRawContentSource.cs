@@ -63,6 +63,17 @@ public sealed class HttpRawContentSource : IRawContentSource, IDisposable
 
     public async Task<RawContent?> GetAsync(string url, string? etag = null, CancellationToken ct = default)
     {
+        using var budget = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        budget.CancelAfter(TimeSpan.FromSeconds(45));
+        try { return await GetWithMirrorsAsync(url, etag, budget.Token).ConfigureAwait(false); }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new HttpRequestException("官方榜单请求超时（45 秒），请稍后重试。");
+        }
+    }
+
+    private async Task<RawContent?> GetWithMirrorsAsync(string url, string? etag, CancellationToken ct)
+    {
         var mirrors = MirrorsFor(url);
         Exception? lastError = null;
 

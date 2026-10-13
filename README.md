@@ -14,7 +14,7 @@ Windows 桌面的 Codeforces Gym / QOJ 虚拟参赛成绩分析工具。同步�
 2. 将 ZIP **完整解压**到可写目录，例如 `%LOCALAPPDATA%\Programs\VPHelper`。不能只复制 EXE，也不要直接从压缩软件内启动。
 3. 运行 `VPHelper.WinUI.exe`。便携包包含 .NET 与 Windows App SDK，无需安装开发用 SDK。
 4. 若账号页面提示缺少浏览器组件，安装微软官方 [WebView2 Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)，然后重新打开应用。Microsoft Edge 浏览器本身不等同于此运行时。
-5. 在「账号管理」选择平台并登录，再点击「同步该账号」；登录不会自动同步。到「官方比赛」筛选已 VP，或到「VP 比赛」查看详情。
+5. 在「账号管理」选择平台并登录，再点击「同步该账号」；登录不会自动同步。同步后自动关联已核实的比赛并获取对应榜单。到「官方比赛」筛选已 VP，或到「VP 比赛」查看详情；“其中已 VP”随筛选结果变化。“更新目录和榜单”可手动刷新全部官方数据。
 
 详细的安装、升级、备份和卸载方法见 [安装指南](docs/INSTALL.md)。名次为基于本地同步结果和官方榜单的推算，不是官方提交成绩。
 
@@ -27,6 +27,14 @@ dotnet test tests/VPHelper.Core.Tests/VPHelper.Core.Tests.csproj --filter "Categ
 dotnet build src/VPHelper.WinUI/VPHelper.WinUI.csproj -p:Platform=x64
 dotnet run --project src/VPHelper.WinUI/VPHelper.WinUI.csproj -p:Platform=x64
 ```
+
+本机开发构建后，也可以通过标准 `.NET MSBuild Run` 启动已编译的应用：
+
+```powershell
+pwsh -File tools/Start-Dev.ps1
+```
+
+此入口沿用同一构建目录、数据库和浏览器登录状态，适合开发时避免反复通过资源管理器打开未签名的 EXE；不调整 Windows 安全策略。没有构建产物时需先构建；脚本优先使用项目指定的 SDK，指定 SDK 不可用时使用本机已安装 SDK 运行现有构建，不修改版本约束。正式发行版如要获得可验证发布者，应使用有效的代码签名证书。
 
 Core/Tests 与 WinUI 是混合平台，请按项目构建。普通测试使用已脱敏的真实网页结构和榜单样本，无需登录平台。只有显式设置 `VPHELPER_LIVE=1` 并选择 Live 测试时才执行真实联网测试。
 

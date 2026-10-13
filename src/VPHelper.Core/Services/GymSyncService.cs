@@ -103,7 +103,7 @@ public class GymSyncService
         account.LastSyncedAt = Math.Max(account.LastSyncedAt ?? 0, newest);
         account.LastSyncCount = stored;
         account.LastSyncError = null; // clear any prior error on success
-        account.TotalSubmissions = await _db.Submissions
+        account.TotalSubmissions = stored + await _db.Submissions
             .CountAsync(s => s.Platform == Platform.Codeforces && s.Handle == handle, ct);
 
         await _db.SaveChangesAsync(ct);
@@ -162,15 +162,20 @@ public class GymSyncService
         IProgress<ScrapeProgress>? progress, CancellationToken ct)
     {
         var ids = recentlyTouchedGyms.ToHashSet();
+        var cache = new SyncRetryCache(_db);
+        var allGyms = await _db.GymContests.Where(g => g.Platform == Platform.Codeforces).ToListAsync(ct);
+        _cloneService!.SeedCache(allGyms);
+        ids.ExceptWith(allGyms.Where(g => g.CloneCheckedAt.HasValue).Select(g => g.GymId));
 
-        var uncheckedGyms = await _db.GymContests
-            .Where(g => g.Platform == Platform.Codeforces && g.CloneCheckedAt == null)
-            .OrderByDescending(g => g.StartTime ?? 0)
-            .Select(g => g.GymId)
-            .Take(40)
-            .ToListAsync(ct);
-        foreach (var gymId in uncheckedGyms)
-            ids.Add(gymId);
+        foreach (var id in ids.ToList())
+            if (await cache.IsCoolingDownAsync($"clone-retry:{id}", ct)) ids.Remove(id);
+        int historical = 0;
+        foreach (var gym in allGyms.Where(g => g.CloneCheckedAt == null).OrderByDescending(g => g.StartTime ?? 0))
+        {
+            if (ids.Contains(gym.GymId) || await cache.IsCoolingDownAsync($"clone-retry:{gym.GymId}", ct)) continue;
+            ids.Add(gym.GymId);
+            if (++historical == 5) break;
+        }
 
         if (ids.Count == 0)
             return;
@@ -186,8 +191,10 @@ public class GymSyncService
             if (gym == null)
                 continue;
 
+            if (gym.CloneCheckedAt.HasValue || await cache.IsCoolingDownAsync($"clone-retry:{gymId}", ct)) continue;
             var chain = await _cloneService!.ResolveAsync(gymId, ct).ConfigureAwait(false);
             ApplyCloneChain(gym, chain);
+            await cache.SetAsync($"clone-retry:{gymId}", chain.IsComplete ? null : TimeSpan.FromHours(6), ct);
         }
 
         await _db.SaveChangesAsync(ct);
@@ -263,8 +270,20 @@ public class GymSyncService
             done++;
             progress?.Report(new ScrapeProgress(0, 0, $"读取 gym {gymId} 参与类型 ({done}/{gyms.Count})…"));
 
+            var cache = new SyncRetryCache(_db);
+            var retryKey = $"cf-type-retry:{handle}:{gymId}";
+            if (await cache.IsCoolingDownAsync(retryKey, ct))
+            {
+                progress?.Report(new ScrapeProgress(0, 0, $"gym {gymId} 参赛类型暂不可用，已跳过重复请求 ({done}/{gyms.Count})"));
+                continue;
+            }
             var result = await _api!.FetchGymAsync(gymId, handle, ct).ConfigureAwait(false);
-            if (!result.Ok) continue; // private gym / auth needed / give-up: keep untyped HTML rows
+            await cache.SetAsync(retryKey, result.Ok ? null : TimeSpan.FromHours(6), ct);
+            if (!result.Ok)
+            {
+                progress?.Report(new ScrapeProgress(0, 0, $"gym {gymId} 参赛类型待补全：{result.Comment} ({done}/{gyms.Count})"));
+                continue;
+            }
 
             // Index the API rows by submission id for a single pass over the stored rows.
             var byId = result.Submissions.ToDictionary(a => a.Id);
